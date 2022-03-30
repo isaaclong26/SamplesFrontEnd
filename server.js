@@ -15,7 +15,7 @@ require('dotenv').config();
 app.use(express.static("public"));
 app.use(cors());
 
-mongoose.connect('mongodb://localhost:27017/samplesdb1' , { useNewUrlParser: true ,  tlsAllowInvalidHostnames: true});
+mongoose.connect('mongodb+srv://isaaclong26:elco9377@cluster0.0claj.mongodb.net/samplesDB?retryWrites=true&w=majority' , { useNewUrlParser: true ,  tlsAllowInvalidHostnames: true});
 
 
 
@@ -23,6 +23,7 @@ mongoose.connect('mongodb://localhost:27017/samplesdb1' , { useNewUrlParser: tru
 
 
 app.post("/addSample/:pro", async (req, res)=>{
+      console.log("/addSample")
 
       let pro = req.params.pro
       
@@ -31,7 +32,7 @@ app.post("/addSample/:pro", async (req, res)=>{
 
 
       let newSamp = await Sample.create(req.body)
-     
+      console.log(newSamp)
        correctProduct.samples.push(newSamp)
 
        correctProduct.save()
@@ -51,6 +52,8 @@ console.log(req.body)
 
 })
 app.post("/addProduct/:cat", async (req, res)=>{
+  console.log("/addProduct")
+  console.log(req.body)
   // Sample Body 
   // name: String,
   //       category: {type: Schema.Types.ObjectId, ref: "cat"},

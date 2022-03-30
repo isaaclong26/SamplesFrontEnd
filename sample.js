@@ -33,6 +33,7 @@ const sampleSchema = new Schema({
     image: String,
     finish: String,
     requestType: String,
+    die: String
 })
 
 
