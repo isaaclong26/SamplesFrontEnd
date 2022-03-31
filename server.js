@@ -140,10 +140,70 @@ app.delete("/", async (req, res)=>{
   
   
 
+app.get("/search/:field/:term", async (req, res)=>{
+  
+    let term = req.params.term
+    let field = req.params.field
 
 
+    if(field == "cat"){
+      let cat = await Cat.findOne({name: term}).populate({path: "products", populate:{path: "samples", model: "Sample"}})
+      let products = cat.products
+
+      let samples = [] 
+      for(x in products){
+          let samps = products[x].samples
+          samples = samples.concat(samps)
+
+      }
+      res.json(samples)
+    
+    }
+
+    else if(field== "product"){
+      let product = await Product.findOne({name: term}).populate({path: "samples"})
+      console.log(product)
+      let samples = product.samples
+      res.json(samples)
+    }
+    else{
+    let query = {[field]:term}
+      console.log(query)
+
+    let results = await Sample.find(query)
 
 
+    res.json(results)
+    }
+
+})
+
+
+app.get("/fixImages", async (req, res) => {
+ 
+  let samples = await Sample.find()
+  let placeholder = "C:/temp/Samples/photos/placeHolder.png" 
+  for(x in samples){
+
+    let image = samples[x].image
+    
+    let name = samples[x].name
+
+    if(image == undefined){
+      console.log("no pic given")
+    }
+    else{
+      console.log(image)
+    }
+
+    
+
+  }
+
+  res.end();
+
+
+})
 
 
 
