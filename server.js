@@ -182,26 +182,50 @@ app.get("/search/:field/:term", async (req, res)=>{
 app.get("/fixImages", async (req, res) => {
  
   let samples = await Sample.find()
-  let placeholder = "C:/temp/Samples/photos/placeHolder.png" 
-  for(x in samples){
 
-    let image = samples[x].image
-    
+  for(x in samples){
     let name = samples[x].name
 
-    if(image == undefined){
-      console.log("no pic given")
-    }
-    else{
-      console.log(image)
-    }
+    name = name.trim()
 
-    
+    samples[x].name = name
 
+    samples[x].save();
   }
+
+
 
   res.end();
 
+
+})
+
+app.get('/addInventory/:id', async (req, res) => {
+
+    let sample = await Sample.findById(req.params.id)
+
+
+      sample.inventory = sample.inventory +1 
+
+      sample.save();   
+     console.log(sample)
+
+      res.end();
+
+})
+app.get('/subtractInventory/:id', async (req, res) => {
+
+  let sample = await Sample.findById(req.params.id)
+
+
+    sample.inventory = sample.inventory -1
+
+  
+    sample.save();
+
+    console.log(sample)
+
+    res.end();
 
 })
 
