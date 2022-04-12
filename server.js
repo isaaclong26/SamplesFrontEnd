@@ -20,6 +20,7 @@ mongoose.connect('mongodb+srv://isaaclong26:elco9377@cluster0.0claj.mongodb.net/
 
 
 
+app.use(express.static(path.join(__dirname, "Public", "build")))
 
 
 app.post("/addSample/:pro", async (req, res)=>{
@@ -286,7 +287,9 @@ app.get("/allRequests", async (req, res)=>{
 
 
 })
-
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "Public", "build", "index.html"));
+});
 app.listen(PORT, () => {
   console.log(`App running on port ${PORT}!`);
 });
