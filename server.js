@@ -5,8 +5,8 @@ const PORT = process.env.PORT || 3001;
 const path = require("path")
 const cors = require('cors');
 const app = express();
-const {Cat, Sample, Product} = require("./sample")
-
+const {Cat, Sample, Product, Request} = require("./sample")
+const fs = require("fs");
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -229,11 +229,81 @@ app.get('/subtractInventory/:id', async (req, res) => {
 
 })
 
+app.get('/addMins' , async (req, res) => {
+  let samples = await Sample.find();
+  let gSamps = []
+  for(x in samples){
+    let samp = samples[x]
 
+    let gSamp =samp.name
+    gSamps.push(gSamp)
+  }
+
+  function uniq(a) {
+    return Array.from(new Set(a));
+ }
+
+ let noDupes = uniq(gSamps)
+ fs.writeFileSync("./text.csv", JSON.stringify(noDupes))
+res.send(noDupes)
+
+
+
+
+})
+
+
+app.post("/newRequest", async (req, res) => {
+  //sample Body: 
+//   {address: "adress",
+//    samples: [array of ids or strings] ,
+//    customer: "name"
+// }
+
+let {address, samples, customer}= req.body;
+
+ let newRequest = await Request.create(req.body)
+
+ console.log(newRequest)
+ res.json(newRequest)
+
+
+
+})
+
+app.get("completedRequest/:id", async (req, res) => {
+
+  let sampReq = Request.findByIdAndUpdate(req.params.id, {status: "Completed", completedDate: new Date()})
+
+  res.json(sampReq)
+
+
+})
+app.get("/allRequests", async (req, res)=>{
+  let reqs = await Request.find().populate({path:"samples"});
+  
+  res.json(reqs)
+
+
+})
 
 app.listen(PORT, () => {
   console.log(`App running on port ${PORT}!`);
 });
 
+app.get("/export", async (req, res)=>{
+  let samples = fs.readFileSync("samples.json")
 
+  function objectsToCSV(arr) {
+    const array = [Object.keys(arr[0])].concat(arr)
+    return array.map(row => {
+        return Object.values(row).map(value => {
+            return typeof value === 'string' ? JSON.stringify(value) : value
+        }).toString()
+    }).join('\n')
+}
+
+  console.log(objectsToCSV(samples))
+
+})
 
