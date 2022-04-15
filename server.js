@@ -287,9 +287,7 @@ app.get("/allRequests", async (req, res)=>{
 
 
 })
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "Public", "build", "index.html"));
-});
+
 app.listen((process.env.PORT || 5000), () => {
   console.log(`App running on port ${PORT}!`);
 });
