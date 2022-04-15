@@ -1,7 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5000;
 const path = require("path")
 const cors = require('cors');
 const app = express();
@@ -290,7 +290,7 @@ app.get("/allRequests", async (req, res)=>{
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "Public", "build", "index.html"));
 });
-app.listen(PORT, () => {
+app.listen((process.env.PORT || 5000), () => {
   console.log(`App running on port ${PORT}!`);
 });
 
