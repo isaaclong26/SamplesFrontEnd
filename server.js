@@ -20,8 +20,9 @@ mongoose.connect('mongodb+srv://isaaclong26:elco9377@cluster0.0claj.mongodb.net/
 
 
 
-app.use(express.static(path.join(__dirname, "Public", "build")))
-
+app.get('/', function(req, res)=>{
+  res.send("hello world")
+})
 
 app.post("/addSample/:pro", async (req, res)=>{
       console.log("/addSample")
