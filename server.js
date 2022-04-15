@@ -14,7 +14,7 @@ require('dotenv').config();
 
 app.use(cors());
 
-mongoose.connect('mongodb+srv://isaaclong26:elco9377@cluster0.0claj.mongodb.net/samplesDB?retryWrites=true&w=majority' , { useNewUrlParser: true ,  tlsAllowInvalidHostnames: true});
+mongoose.connect(process.env.MONGODB_URI , { useNewUrlParser: true ,  tlsAllowInvalidHostnames: true});
 
 
 
