@@ -20,7 +20,7 @@ mongoose.connect('mongodb+srv://isaaclong26:elco9377@cluster0.0claj.mongodb.net/
 
 
 
-app.get('/', function(req, res)=>{
+app.get('/', (req, res)=>{
   res.send("hello world")
 })
 
