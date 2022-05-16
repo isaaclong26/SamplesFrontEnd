@@ -1,104 +1,136 @@
 const express = require("express");
 const mongoose = require("mongoose");
+import sha256 from 'crypto-js/sha256';
+import Base64 from 'crypto-js/enc-base64';
+import HmacSHA1 from 'crypto-js/hmac-sha1';
+import {
+  enc
+} from 'crypto-js';
+const apiKey = 'ck_e86cfb8fed55e87904e573fb3eb77cf1f6aa0a76'
 
-const PORT = process.env.PORT || 5000;
+
+const PORT = process.env.PORT || 3001;
 const path = require("path")
 const cors = require('cors');
 const app = express();
-const {Cat, Sample, Product, Request} = require("./sample")
+const {
+  Cat,
+  Sample,
+  Product,
+  Request
+} = require("./sample")
 const fs = require("fs");
 
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({
+  extended: true
+}));
 app.use(express.json());
 require('dotenv').config();
 
+app.use(express.static("public"));
 app.use(cors());
 
-mongoose.connect(process.env.MONGODB_URI , { useNewUrlParser: true ,  tlsAllowInvalidHostnames: true});
+mongoose.connect('mongodb+srv://isaaclong26:elco9377@cluster0.0claj.mongodb.net/samplesDB?retryWrites=true&w=majority', {
+  useNewUrlParser: true,
+  tlsAllowInvalidHostnames: true
+});
 
 
 
 
-app.get('/', (req, res)=>{
-  res.send("hello world")
+app.use(express.static(path.join(__dirname, "Public", "build")))
+
+
+app.post("/addSample/:pro", async (req, res) => {
+  console.log("/addSample")
+
+  let pro = req.params.pro
+
+  let correctProduct = await Product.findOne({
+    name: pro
+  })
+
+
+
+  let newSamp = await Sample.create(req.body)
+  console.log(newSamp)
+  correctProduct.samples.push(newSamp)
+
+  correctProduct.save()
+
+  res.send(correctProduct)
 })
-
-app.post("/addSample/:pro", async (req, res)=>{
-      console.log("/addSample")
-
-      let pro = req.params.pro
-      
-      let correctProduct = await Product.findOne({name: pro})
-      
-
-
-      let newSamp = await Sample.create(req.body)
-      console.log(newSamp)
-       correctProduct.samples.push(newSamp)
-
-       correctProduct.save()
-
-      res.send(correctProduct)
-})
-app.post("/addCat", async (req, res)=>{
+app.post("/addCat", async (req, res) => {
   console.log("/addCat")
-console.log(req.body)
-// { Sample Body 
-//      name: String,
-//     inventory: Number,
-//     products: [{type: Schema.Types.ObjectId, ref:"product"}
+  console.log(req.body)
+  // { Sample Body 
+  //      name: String,
+  //     inventory: Number,
+  //     products: [{type: Schema.Types.ObjectId, ref:"product"}
 
-  Cat.create(req.body).then(newCat => {res.json(newCat);})
+  Cat.create(req.body).then(newCat => {
+    res.json(newCat);
+  })
 
 
 })
-app.post("/addProduct/:cat", async (req, res)=>{
+app.post("/addProduct/:cat", async (req, res) => {
   console.log("/addProduct")
   console.log(req.body)
   // Sample Body 
   // name: String,
   //       category: {type: Schema.Types.ObjectId, ref: "cat"},
   //       samples: [{type: Schema.Types.ObjectId, ref: "sample"}]
-  
 
 
-    let cat = req.params.cat
-    let corCat = await Cat.findOne({name: cat}).populate()
-    let newProduct = await Product.create(req.body)
-    corCat.products.push(newProduct)
-    corCat.save();
-    console.log(corCat)
-    res.send(corCat)
-  
-  
+
+  let cat = req.params.cat
+  let corCat = await Cat.findOne({
+    name: cat
+  }).populate()
+  let newProduct = await Product.create(req.body)
+  corCat.products.push(newProduct)
+  corCat.save();
+  console.log(corCat)
+  res.send(corCat)
+
+
+})
+
+
+app.get("/cats", async (req, res) => {
+  console.log('/cats')
+  let cats = await Cat.find().populate({
+    path: "products",
+    populate: {
+      path: "samples",
+      model: "Sample"
+    }
   })
+  res.json(cats);
 
+})
 
- app.get("/cats", async (req, res)=>{
-    console.log('/cats')
-    let cats = await Cat.find().populate({path: "products", populate:{path: "samples", model: "Sample"}})
-    res.json(cats);
-
- }) 
-  
- app.get("/samples", async (req, res)=>{
+app.get("/samples", async (req, res) => {
 
   let cats = await Sample.find()
 
   res.json(cats);
 
-}) 
-app.get("/products", async (req, res)=>{
+})
+app.get("/products", async (req, res) => {
 
   let cats = await Product.find()
 
   res.json(cats);
 
-}) 
+})
 
 
-app.put("/cats/:catId", async (req, res)=>{
-  let {catID} = req.params
+app.put("/cats/:catId", async (req, res) => {
+  let {
+    catID
+  } = req.params
   let update = req.body
 
   let x = await Cat.findOneAndUpdate(catID, update)
@@ -108,8 +140,10 @@ app.put("/cats/:catId", async (req, res)=>{
 
 })
 
-app.put("/product/:productId", async (req, res)=>{
-  let {productId} = req.params
+app.put("/product/:productId", async (req, res) => {
+  let {
+    productId
+  } = req.params
   let update = req.body
 
   let x = await Product.findOneAndUpdate(productID, update)
@@ -118,8 +152,10 @@ app.put("/product/:productId", async (req, res)=>{
 
 
 })
-app.put("/sample/:sampleId", async (req, res)=>{
-  let {sampleId} = req.params
+app.put("/sample/:sampleId", async (req, res) => {
+  let {
+    sampleId
+  } = req.params
   let update = req.body
 
   let x = await Sample.findOneAndUpdate(productID, update)
@@ -129,62 +165,73 @@ app.put("/sample/:sampleId", async (req, res)=>{
 
 })
 
-app.delete("/", async (req, res)=>{
+app.delete("/", async (req, res) => {
 
   await Sample.deleteMany({})
   await Product.deleteMany({})
- await  Cat.deleteMany({})
+  await Cat.deleteMany({})
   res.send("done")
 
 
 })
-  
-  
-
-app.get("/search/:field/:term", async (req, res)=>{
-  
-    let term = req.params.term
-    let field = req.params.field
 
 
-    if(field == "cat"){
-      let cat = await Cat.findOne({name: term}).populate({path: "products", populate:{path: "samples", model: "Sample"}})
-      let products = cat.products
 
-      let samples = [] 
-      for(x in products){
-          let samps = products[x].samples
-          samples = samples.concat(samps)
+app.get("/search/:field/:term", async (req, res) => {
 
+  let term = req.params.term
+  let field = req.params.field
+
+
+  if (field == "cat") {
+    let cat = await Cat.findOne({
+      name: term
+    }).populate({
+      path: "products",
+      populate: {
+        path: "samples",
+        model: "Sample"
       }
-      res.json(samples)
-    
-    }
+    })
+    let products = cat.products
 
-    else if(field== "product"){
-      let product = await Product.findOne({name: term}).populate({path: "samples"})
-      console.log(product)
-      let samples = product.samples
-      res.json(samples)
+    let samples = []
+    for (x in products) {
+      let samps = products[x].samples
+      samples = samples.concat(samps)
+
     }
-    else{
-    let query = {[field]:term}
-      console.log(query)
+    res.json(samples)
+
+  } else if (field == "product") {
+    let product = await Product.findOne({
+      name: term
+    }).populate({
+      path: "samples"
+    })
+    console.log(product)
+    let samples = product.samples
+    res.json(samples)
+  } else {
+    let query = {
+      [field]: term
+    }
+    console.log(query)
 
     let results = await Sample.find(query)
 
 
     res.json(results)
-    }
+  }
 
 })
 
 
 app.get("/fixImages", async (req, res) => {
- 
+
   let samples = await Sample.find()
 
-  for(x in samples){
+  for (x in samples) {
     let name = samples[x].name
 
     name = name.trim()
@@ -203,15 +250,15 @@ app.get("/fixImages", async (req, res) => {
 
 app.get('/addInventory/:id', async (req, res) => {
 
-    let sample = await Sample.findById(req.params.id)
+  let sample = await Sample.findById(req.params.id)
 
 
-      sample.inventory = sample.inventory +1 
+  sample.inventory = sample.inventory + 1
 
-      sample.save();   
-     console.log(sample)
+  sample.save();
+  console.log(sample)
 
-      res.end();
+  res.end();
 
 })
 app.get('/subtractInventory/:id', async (req, res) => {
@@ -219,34 +266,34 @@ app.get('/subtractInventory/:id', async (req, res) => {
   let sample = await Sample.findById(req.params.id)
 
 
-    sample.inventory = sample.inventory -1
+  sample.inventory = sample.inventory - 1
 
-  
-    sample.save();
 
-    console.log(sample)
+  sample.save();
 
-    res.end();
+  console.log(sample)
+
+  res.end();
 
 })
 
-app.get('/addMins' , async (req, res) => {
+app.get('/addMins', async (req, res) => {
   let samples = await Sample.find();
   let gSamps = []
-  for(x in samples){
+  for (x in samples) {
     let samp = samples[x]
 
-    let gSamp =samp.name
+    let gSamp = samp.name
     gSamps.push(gSamp)
   }
 
   function uniq(a) {
     return Array.from(new Set(a));
- }
+  }
 
- let noDupes = uniq(gSamps)
- fs.writeFileSync("./text.csv", JSON.stringify(noDupes))
-res.send(noDupes)
+  let noDupes = uniq(gSamps)
+  fs.writeFileSync("./text.csv", JSON.stringify(noDupes))
+  res.send(noDupes)
 
 
 
@@ -256,17 +303,21 @@ res.send(noDupes)
 
 app.post("/newRequest", async (req, res) => {
   //sample Body: 
-//   {address: "adress",
-//    samples: [array of ids or strings] ,
-//    customer: "name"
-// }
+  //   {address: "adress",
+  //    samples: [array of ids or strings] ,
+  //    customer: "name"
+  // }
 
-let {address, samples, customer}= req.body;
+  let {
+    address,
+    samples,
+    customer
+  } = req.body;
 
- let newRequest = await Request.create(req.body)
+  let newRequest = await Request.create(req.body)
 
- console.log(newRequest)
- res.json(newRequest)
+  console.log(newRequest)
+  res.json(newRequest)
 
 
 
@@ -274,37 +325,99 @@ let {address, samples, customer}= req.body;
 
 app.get("completedRequest/:id", async (req, res) => {
 
-  let sampReq = Request.findByIdAndUpdate(req.params.id, {status: "Completed", completedDate: new Date()})
+  let sampReq = Request.findByIdAndUpdate(req.params.id, {
+    status: "Completed",
+    completedDate: new Date()
+  })
 
   res.json(sampReq)
 
 
 })
-app.get("/allRequests", async (req, res)=>{
-  let reqs = await Request.find().populate({path:"samples"});
-  
+app.get("/allRequests", async (req, res) => {
+  let reqs = await Request.find().populate({
+    path: "samples"
+  });
+
   res.json(reqs)
 
 
 })
-
-app.listen((process.env.PORT || 5000), () => {
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "Public", "build", "index.html"));
+});
+app.listen(PORT, () => {
   console.log(`App running on port ${PORT}!`);
 });
 
-app.get("/export", async (req, res)=>{
+app.get("/export", async (req, res) => {
   let samples = fs.readFileSync("samples.json")
 
   function objectsToCSV(arr) {
     const array = [Object.keys(arr[0])].concat(arr)
     return array.map(row => {
-        return Object.values(row).map(value => {
-            return typeof value === 'string' ? JSON.stringify(value) : value
-        }).toString()
+      return Object.values(row).map(value => {
+        return typeof value === 'string' ? JSON.stringify(value) : value
+      }).toString()
     }).join('\n')
-}
+  }
 
   console.log(objectsToCSV(samples))
 
 })
 
+app.get("/Warranty", async (req, res) => {
+
+  function CalculateSig(stringToSign, privateKey) {
+    var hash = HmacSHA1(stringToSign, privateKey);
+    var base64 = hash.toString(enc.Base64);
+    return encodeURIComponent(base64);
+  }
+
+  function toTimestamp() {
+    var datum = new Date();
+    return datum.getTime() / 1000;
+  }
+
+  let d = toTimestamp();
+
+  let expiration = 3600 // 1 hour,
+  let unixtime = d + expiration;
+  let future_unixtime = unixtime + expiration;
+  let publicKey = "1234";
+  let privateKey = "abcd";
+  let method = "GET";
+  let route = "forms/1/entries";
+
+  let stringToSign = publicKey + ":" + method + ":" + route + ":" + future_unixtime;
+  let sig = CalculateSig(stringToSign, privateKey);
+  console.log(sig);
+  const fetchOptions = {
+    method: method,
+
+    headers: new Headers({
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      "Access-Control-Allow-Origin": "*"
+    }),
+  }
+
+  let fetchUrl = `http://solarinnovations.com/gravityformsapi/entries/api_key=${apiKey}&signature=${sig}&expires=${unixtime}`
+
+
+  await fetch(fetchUrl, fetchOptions)
+    .then(response => response.json())
+    .then((data) => {
+      console.log(data)
+    })
+
+
+
+
+
+
+
+
+
+
+})
